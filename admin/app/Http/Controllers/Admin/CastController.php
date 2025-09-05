@@ -26,6 +26,7 @@ class CastController extends Controller
             return response()->json(array('status' => 400, 'errors' => $e->getMessage()));
         }
     }
+    // add functionality
     public function data(Request $request)
     {
         try {
