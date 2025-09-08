@@ -88,6 +88,12 @@
                 <span>Events</span>
             </a>
         </li>
+         <li class="{{ request()->is('admin/booking*') ? 'active' : '' }}">
+            <a href="{{ route('admin.bookings.index') }}">
+                <img class="menu-icon" src="{{ asset('assets/imgs/cast.png') }}" alt="" />
+                <span>Bookings</span>
+            </a>
+        </li>
          <li class="{{ request()->is('admin/service*') ? 'active' : '' }}">
             <a href="{{ route('service') }}">
                 <img class="menu-icon" src="{{ asset('assets/imgs/cast.png') }}" alt="" />

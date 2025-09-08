@@ -10,5 +10,9 @@ class Package extends Model
     use HasFactory;
 
     protected $table = 'package';
-    protected $guarded = array();    
+    protected $guarded = array(); 
+      public function laboratories()
+    {
+        return $this->hasMany(Laboratory::class);
+    }   
 }

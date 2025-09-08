@@ -156,19 +156,19 @@ function string_cut($string, $len)
     return $string;
 }
 
-// function Get_Image($folder = "", $name = "")
-// {
-//     $data = env('IMAGE_PATH') . '/' . $folder . '/' . $name;
-//     return ($data);
-// }
 function Get_Image($folder = "", $name = "")
 {
-    if ($name) {
-        return config('images.path') . '/' . $folder . '/' . $name;
-    } else {
-        return asset('assets/imgs/1.png'); // default image
-    }
+    $data = env('IMAGE_PATH') . '/' . $folder . '/' . $name;
+    return ($data);
 }
+// function Get_Image($folder = "", $name = "")
+// {
+//     if ($name) {
+//         return config('images.path') . '/' . $folder . '/' . $name;
+//     } else {
+//         return asset('assets/imgs/1.png'); // default image
+//     }
+// }
 
 
 function TimeToMilliseconds($str)
