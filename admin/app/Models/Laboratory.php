@@ -8,31 +8,30 @@ class Laboratory extends Model
     protected $fillable = [
         'name',
         'address',
-        'cast_id',
-        'package_id',
-        'test_id',
-        'user_id',
+        // 'cast_id',
+        // 'package_id',
+        // 'test_id',
         'status'
     ];
-    public function cast()
+    public function casts()
     {
-        return $this->belongsTo(Cast::class);
+        return $this->belongsToMany(Cast::class, 'laboratory_cast');
     }
-    public function package()
+    public function packages()
     {
-        return $this->belongsTo(Package::class);
+        return $this->belongsToMany(Package::class, 'laboratory_package');
+    }
+    public function tests()
+    {
+        return $this->belongsToMany(LabTest::class,  'laboratory_test', 'laboratory_id', 'test_id');
     }
     public function LabTest()
     {
-        return $this->belongsTo(LabTest::class,'test_id');
+        return $this->belongsTo(LabTest::class, 'test_id');
     }
     public function test()
     {
-        return $this->belongsTo(LabTest::class,'test_id');
-    }
-    public function user()
-    {
-        return $this->belongsTo(Users::class);
+        return $this->belongsTo(LabTest::class, 'test_id');
     }
     public function bookings()
     {

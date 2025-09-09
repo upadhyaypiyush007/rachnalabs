@@ -27,7 +27,6 @@
                     <th>{{ __('Label.Cast') }}</th>
                     <th>{{ __('Label.Package') }}</th>
                     <th>{{ __('Label.Test') }}</th>
-                    <th>{{ __('Label.User') }}</th>
                     <th>{{ __('Label.Status') }}</th>
                     <th>{{ __('Label.Action') }}</th>
                 </tr>
@@ -65,7 +64,7 @@ $(document).ready(function() {
             { data: 'cast_name', name: 'cast_name' },
             { data: 'package_name', name: 'package_name' },
             { data: 'test_name', name: 'test_name' },
-            { data: 'user_name', name: 'user_name' },
+            // { data: 'user_name', name: 'user_name' },
             { data: 'status', name: 'status' },
             { data: 'action', name: 'action', orderable: false, searchable: false },
         ]

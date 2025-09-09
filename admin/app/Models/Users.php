@@ -10,8 +10,5 @@ class Users extends Authenticatable
     use Notifiable;
     protected $table = 'user';
     protected $guarded = array();
-    public function laboratories()
-    {
-        return $this->hasMany(Laboratory::class);
-    }
+    
 }

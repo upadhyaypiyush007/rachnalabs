@@ -323,7 +323,8 @@ class UserController extends Controller
     }
     public function get_alllabs()
     {
-        $Data = Lablists::get();
+        $Data = Laboratory::get();
+
         if (sizeof($Data) > 0) {
             return APIResponse(200, __('api_msg.get_record_successfully'), $Data);
         } else {
@@ -1178,14 +1179,14 @@ class UserController extends Controller
     public function booking_list(Request $request)
     {
         try {
-            $query = Booking::with([
-                'user:id,name,image',
-                'test:id,name'
-            ])->orderBy('id', 'desc');
+            $query = Booking::with('user')->orderBy('id', 'desc');
+
             if ($request->has('user_id') && !empty($request->user_id)) {
                 $query->where('user_id', $request->user_id);
             }
+
             $bookings = $query->get();
+
             if ($bookings->isEmpty()) {
                 return response()->json([
                     'status' => 200,
@@ -1193,30 +1194,42 @@ class UserController extends Controller
                     'result' => []
                 ], 200);
             }
+
             $result = [];
             foreach ($bookings as $booking) {
+                // Image URL logic
+                $image_url = $booking->user && $booking->user->image ? Get_Image('user', $booking->user->image) : asset('assets/imgs/1.png');
+
+                // Status logic
                 $status = 'Pending';
                 if ($booking->payment_status == 1) {
                     $status = 'Booked';
                 } elseif ($booking->payment_status == 2) {
                     $status = 'Cancelled';
                 }
+
+                // Payment ID formatting
+                $payment_id = ucfirst($booking->payment_id);
+
                 $result[] = [
                     'booking_id' => $booking->booking_id,
                     'user_name' => $booking->user->name ?? '',
-                    'user_image' => $booking->user->image ?? '',
-                    'test_name' => $booking->test->name ?? '',
-                    'date' => date('d M Y', strtotime($booking->created_at)),
-                    'time' => date('h:i A', strtotime($booking->created_at)),
+                    'user_image' => $image_url,
+                    'booking_type' => ucfirst($booking->booking_type),
+                    'payment_status' => $status,
+                    'payment_id' => $payment_id,
+                    'date' => $booking->created_at->format('d M Y'),
+                    'time' => $booking->created_at->format('h:i A'),
                     'center_name' => 'Rachana Diagnostic',
-                    'status' => $status,
                 ];
             }
+
             return response()->json([
                 'status' => 200,
                 'message' => 'Booking list fetched successfully',
                 'result' => $result
             ], 200);
+
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 400,
@@ -1224,4 +1237,5 @@ class UserController extends Controller
             ], 400);
         }
     }
+
 }

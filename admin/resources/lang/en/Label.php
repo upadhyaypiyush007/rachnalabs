@@ -364,6 +364,8 @@ return [
 	'Create' => 'Create',
 	'Save' => 'Save',
 	'Edit Laboratory' => 'Edit Laboratory',
+	'Create Laboratory' => 'Create Laboratory',
+	'Doctors' => 'Doctors',
 
 ]
 	?>
