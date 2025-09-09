@@ -189,6 +189,7 @@ class UserController extends Controller
                 'user_id' => $user_id,
                 'booking_id' => $booking_id,
                 'test_id' => $request->test_id,
+                'package_id' => $request->package_id,
                 'amount' => $request->amount,
                 'booking_type' => $booking_type,
                 'center_id' => $center_id,
@@ -199,6 +200,7 @@ class UserController extends Controller
             ];
             $b_id = Booking::insertGetId($data);
             $booking = Booking::find($b_id);
+            // dd($data,$b_id,$booking);
             return APIResponse(200, 'Booking saved successfully', $booking);
         } catch (Exception $e) {
             return APIResponse(500, 'Server error: ' . $e->getMessage());

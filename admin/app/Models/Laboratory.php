@@ -22,9 +22,13 @@ class Laboratory extends Model
     {
         return $this->belongsTo(Package::class);
     }
+    public function LabTest()
+    {
+        return $this->belongsTo(LabTest::class,'test_id');
+    }
     public function test()
     {
-        return $this->belongsTo(LabTest::class);
+        return $this->belongsTo(LabTest::class,'test_id');
     }
     public function user()
     {

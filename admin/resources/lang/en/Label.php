@@ -358,5 +358,12 @@ return [
 	'Bookings'=>'Bookings',
 	'payment_id'=>'Payment ID',
 	'Availability'=>'Availability',
+	'Address'=>'Address',
+	'Test' => 'Test',
+	'Laboratories' => 'Laboratories',
+	'Create' => 'Create',
+	'Save' => 'Save',
+	'Edit Laboratory' => 'Edit Laboratory',
+
 ]
 	?>

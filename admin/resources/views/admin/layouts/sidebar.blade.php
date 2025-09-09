@@ -94,6 +94,12 @@
                 <span>Bookings</span>
             </a>
         </li>
+         <li class="{{ request()->is('admin/laboratories*') ? 'active' : '' }}">
+            <a href="{{ route('admin.laboratories.index') }}">
+                <img class="menu-icon" src="{{ asset('assets/imgs/cast.png') }}" alt="" />
+                <span>Laboratories</span>
+            </a>
+        </li>
          <li class="{{ request()->is('admin/service*') ? 'active' : '' }}">
             <a href="{{ route('service') }}">
                 <img class="menu-icon" src="{{ asset('assets/imgs/cast.png') }}" alt="" />

@@ -265,4 +265,15 @@ Route::group(['namespace' => 'Admin', 'prefix' => 'admin', 'middleware' => 'auth
   Route::get('bookings/{id}/edit', 'BookingController@edit')->name('admin.bookings.edit');
   Route::post('bookings/{id}/update', 'BookingController@update')->name('admin.bookings.update');
   Route::delete('bookings/{id}', 'BookingController@destroy')->name('admin.bookings.destroy');
-});
+
+   // Laboratory Routes
+Route::get('laboratories', 'LaboratoryController@index')->name('admin.laboratories.index');
+Route::get('laboratories/data', 'LaboratoryController@data')->name('admin.laboratories.data');
+Route::get('laboratories/create', 'LaboratoryController@create')->name('admin.laboratories.create');
+Route::post('laboratories/store', 'LaboratoryController@store')->name('admin.laboratories.store');
+// Route::get('laboratories/{id}', 'LaboratoryController@show')->name('admin.laboratories.show');
+Route::get('laboratories/{id}/edit', 'LaboratoryController@edit')->name('admin.laboratories.edit');
+Route::post('laboratories/{id}', 'LaboratoryController@update')->name('admin.laboratories.update');
+Route::delete('laboratories/{id}', 'LaboratoryController@destroy')->name('admin.laboratories.destroy');
+
+  });
