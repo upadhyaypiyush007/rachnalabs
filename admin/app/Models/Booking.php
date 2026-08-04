@@ -21,4 +21,12 @@ class Booking extends Model
     {
         return $this->belongsTo(Service::class,'test_id');
     }
+    public function center()
+    {
+        return $this->belongsTo(Laboratory::class, 'center_id');
+    }
+    public function cast()
+    {
+        return $this->belongsTo(Laboratory::class, 'cast_id');
+    }
 }

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\LabTestController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -250,12 +251,29 @@ Route::group(['namespace' => 'Admin', 'prefix' => 'admin', 'middleware' => 'auth
   Route::get('transaction/data', 'TransactionController@data')->name('TransactionData');
 
   //Tests
-Route::resource('labtests', 'LabTestController')->names([
+  Route::resource('labtests', 'LabTestController')->names([
     'index' => 'labtests.list',
     'create' => 'labtests.create',
     'store' => 'labtests.store',
     'edit' => 'labtests.edit',
     'update' => 'labtests.update',
     'destroy' => 'labtests.destroy',
-]);
-});
+  ]);
+  Route::get('bookings', 'BookingController@index')->name('admin.bookings.index');
+  Route::get('bookings/data', 'BookingController@data')->name('admin.bookings.data');
+  Route::get('bookings/{id}', 'BookingController@show')->name('admin.bookings.show');
+  Route::get('bookings/{id}/edit', 'BookingController@edit')->name('admin.bookings.edit');
+  Route::post('bookings/{id}/update', 'BookingController@update')->name('admin.bookings.update');
+  Route::delete('bookings/{id}', 'BookingController@destroy')->name('admin.bookings.destroy');
+
+   // Laboratory Routes
+Route::get('laboratories', 'LaboratoryController@index')->name('admin.laboratories.index');
+Route::get('laboratories/data', 'LaboratoryController@data')->name('admin.laboratories.data');
+Route::get('laboratories/create', 'LaboratoryController@create')->name('admin.laboratories.create');
+Route::post('laboratories/store', 'LaboratoryController@store')->name('admin.laboratories.store');
+// Route::get('laboratories/{id}', 'LaboratoryController@show')->name('admin.laboratories.show');
+Route::get('laboratories/{id}/edit', 'LaboratoryController@edit')->name('admin.laboratories.edit');
+Route::post('laboratories/{id}', 'LaboratoryController@update')->name('admin.laboratories.update');
+Route::delete('laboratories/{id}', 'LaboratoryController@destroy')->name('admin.laboratories.destroy');
+
+  });

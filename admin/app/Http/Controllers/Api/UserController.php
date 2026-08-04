@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Http\Controllers\Api;
-
 use App\Http\Controllers\Controller;
 use App\Models\Type;
 use App\Models\Users;
@@ -21,9 +19,10 @@ use App\Models\Gallery;
 use App\Models\Lablists;
 use App\Models\Blogcategory;
 use App\Models\Relation;
+use App\Models\Cast;
+use App\Models\Laboratory;
 use Illuminate\Http\Request;
 use Validator;
-
 class UserController extends Controller
 {
     private $folder = "language";
@@ -37,11 +36,9 @@ class UserController extends Controller
     private $folder8 = "avatar";
     private $folder9 = "blog";
     private $folder10 = "other";
-
     public function get_profile(Request $request)
     {
         try {
-
             $validation = Validator::make(
                 $request->all(),
                 [
@@ -52,7 +49,6 @@ class UserController extends Controller
                 ]
             );
             if ($validation->fails()) {
-
                 $errors = $validation->errors()->first('id');
                 $data['status'] = 400;
                 if ($errors) {
@@ -60,11 +56,9 @@ class UserController extends Controller
                 }
                 return $data;
             }
-
             $id = $request->id;
             $Data = Users::where('id', $id)->first();
             if (!empty($Data)) {
-
                 if (!empty($Data->image)) {
                     $path = Get_Image($this->folder7, $Data->image);
                     $Data['image'] = $path;
@@ -79,87 +73,142 @@ class UserController extends Controller
             return response()->json(array('status' => 400, 'errors' => $e->getMessage()));
         }
     }
-    
-     public function create_booking(Request $request)
+    // public function create_booking(Request $request)
+    // {
+    //     try {
+    //         $validation = Validator::make(
+    //             $request->all(),
+    //             [
+    //                 'user_id' => 'required|numeric',
+    //             ],
+    //             [
+    //                 'user_id.required' => __('api_msg.please_enter_required_fields'),
+    //             ]
+    //         );
+    //         if ($validation->fails()) {
+    //             $errors = $validation->errors()->first('mobile');
+    //             $data['status'] = 400;
+    //             if ($errors) {
+    //                 $data['message'] = $errors;
+    //             }
+    //             return $data;
+    //         }
+    //         $user_id = $request->user_id;
+    //         $class_category_id = $request->booking_type;
+    //         $package_id = $request->test_id;
+    //         $booking_id = date('ymdhis');
+    //         $data = Users::where('id', $user_id)->first();
+    //         if (!empty($data)) {
+    //             $data = array(
+    //                 'user_id' => $user_id,
+    //                 'booking_id' => $booking_id,
+    //                 'test_id' => $package_id,
+    //                 'amount' => $request->amount,
+    //                 'booking_type' => $class_category_id
+    //             );
+    //             $b_id = Booking::insertGetId($data);
+    //             if (isset($user_id)) {
+    //                 $user_data = Booking::where('id', $b_id)->first();
+    //                 // Image
+    //                 $return['status'] = 200;
+    //                 $return['message'] = 'Booking saved successfully';
+    //                 $return['result'] = $user_data;
+    //                 return $return;
+    //             } else {
+    //                 return APIResponse(400, 'Something went wrong');
+    //             }
+    //         } else {
+    //             return APIResponse(400, 'User id not correct');
+    //         }
+    //     } catch (Exception $e) {
+    //         return response()->json(array('status' => 400, 'errors' => $e->getMessage()));
+    //     }
+    // }
+    public function create_booking(Request $request)
     {
         try {
-
-            
-
-                $validation = Validator::make(
-                    $request->all(),
-                    [
-                        'user_id' => 'required|numeric',
-                    ],
-                    [
-                        'user_id.required' => __('api_msg.please_enter_required_fields'),
-                    ]
-                );
-                if ($validation->fails()) {
-
-                    $errors = $validation->errors()->first('mobile');
-                    $data['status'] = 400;
-                    if ($errors) {
-                        $data['message'] = $errors;
-                    }
-                    return $data;
+            $validation = Validator::make(
+                $request->all(),
+                [
+                    'user_id' => 'required|numeric',
+                    'doctor_id' => 'nullable|numeric',
+                    'booking_type' => 'required|string',
+                    'center_id' => 'required|numeric',
+                    'date' => 'required|date',
+                    'time_slot' => 'required|string',
+                ],
+                [
+                    'doctor_id.required' => 'Doctor ID is required',
+                    'booking_type.required' => 'Type is required',
+                    'center_id.required' => 'Center is required',
+                    'date.required' => 'Date is required',
+                    'time_slot.required' => 'Time slot is required',
+                ]
+            );
+            if ($validation->fails()) {
+                return APIResponse(400, $validation->errors()->first());
+            }
+            $user_id = $request->user_id;
+            $doctor_id = $request->doctor_id;
+            $booking_type = strtolower($request->booking_type);
+            $center_id = $request->center_id;
+            $date = $request->date;
+            $time_slot = $request->time_slot;
+            $user = Users::find($user_id);
+            if (!$user) {
+                return APIResponse(400, 'User id not correct');
+            }
+            $center = Laboratory::find($center_id);
+            if (!$center) {
+                return APIResponse(400, 'Invalid center');
+            }
+            $availability = null;
+            if ($booking_type === 'doctor') {
+                if (!$doctor_id) {
+                    return APIResponse(400, 'Doctor ID is required for doctor booking');
                 }
-                
-                $user_id=$request->user_id;
-            
-        $class_category_id = $request->booking_type;
-           
-            $package_id =$request->test_id;
-         
-            $booking_id=date('ymdhis');
-
-          
-
-                $data = Users::where('id', $user_id)->first();
-                if (!empty($data)) {
-                    
-                     $data = array(
-                        'user_id' => $user_id,
-                        'booking_id' => $booking_id,
-                        'test_id' => $package_id,
-                        'amount' => $request->amount,
-                        'booking_type' =>$class_category_id
-                       
-                    );
-                    $b_id = Booking::insertGetId($data);
-                    if (isset($user_id)) {
-
-                        $user_data = Booking::where('id', $b_id)->first();
-                        // Image
-                    
-                    $return['status'] = 200;
-                    $return['message'] = 'Booking saved successfully';
-                    $return['result'] = $user_data;
-                    return $return;
-                    
-                    }else {
-
-                   
-                        return APIResponse(400, 'Something went wrong');
-                    
+                $doctor = Cast::find($doctor_id);
+                if (!$doctor) {
+                    return APIResponse(400, 'Doctor details not found');
                 }
-                } else {
-
-                   
-                        return APIResponse(400, 'User id not correct');
-                    
+                if (!$doctor->availability_start || !$doctor->availability_end) {
+                    return APIResponse(400, 'Availability timings not set for this doctor');
                 }
-
-
+                $slot_time = strtotime($time_slot);
+                $start_time = strtotime($doctor->availability_start);
+                $end_time = strtotime($doctor->availability_end);
+                if ($slot_time < $start_time || $slot_time > $end_time) {
+                    return APIResponse(400, 'Doctor is not availabile on this time slot');
+                }
+                $start = date('h:i A', strtotime($doctor->availability_start));
+                $end = date('h:i A', strtotime($doctor->availability_end));
+                $availability = $start . ' - ' . $end;
+            }
+            $booking_id = date('ymdhis');
+            $data = [
+                'user_id' => $user_id,
+                'booking_id' => $booking_id,
+                'test_id' => $request->test_id,
+                'package_id' => $request->package_id,
+                'amount' => $request->amount,
+                'booking_type' => $booking_type,
+                'center_id' => $center_id,
+                'time_slot' => $time_slot,
+                'date' => $date,
+                'availability' => $availability,
+                'cast_id' => $doctor_id,
+            ];
+            $b_id = Booking::insertGetId($data);
+            $booking = Booking::find($b_id);
+            // dd($data,$b_id,$booking);
+            return APIResponse(200, 'Booking saved successfully', $booking);
         } catch (Exception $e) {
-            return response()->json(array('status' => 400, 'errors' => $e->getMessage()));
+            return APIResponse(500, 'Server error: ' . $e->getMessage());
         }
     }
-    
-     public function booking_success(Request $request)
+    public function booking_success(Request $request)
     {
         try {
-
             $validation = Validator::make(
                 $request->all(),
                 [
@@ -170,7 +219,6 @@ class UserController extends Controller
                 ]
             );
             if ($validation->fails()) {
-
                 $errors = $validation->errors()->first('id');
                 $data['status'] = 400;
                 if ($errors) {
@@ -178,23 +226,14 @@ class UserController extends Controller
                 }
                 return $data;
             }
-
             $id = $request->booking_id;
             $data = array();
-
             $User_Data = Booking::where('booking_id', $id)->first();
             if (!empty($User_Data)) {
-
-              
-                    $data['payment_id'] = $request->payment_id;
-               
-                    $data['payment_status'] = $request->payment_status;
-               
+                $data['payment_id'] = $request->payment_id;
+                $data['payment_status'] = $request->payment_status;
                 $User_Data->update($data);
-                if(isset($User_Data)){
-
-                    
-
+                if (isset($User_Data)) {
                     $Data['status'] = 200;
                     $Data['message'] = 'Data updated';
                     $Data['result'] = $User_Data;
@@ -207,12 +246,9 @@ class UserController extends Controller
             return response()->json(array('status' => 400, 'errors' => $e->getMessage()));
         }
     }
-
-    
     public function blog_details(Request $request)
     {
         try {
-
             $validation = Validator::make(
                 $request->all(),
                 [
@@ -223,7 +259,6 @@ class UserController extends Controller
                 ]
             );
             if ($validation->fails()) {
-
                 $errors = $validation->errors()->first('id');
                 $data['status'] = 400;
                 if ($errors) {
@@ -231,11 +266,9 @@ class UserController extends Controller
                 }
                 return $data;
             }
-
             $id = $request->blog_id;
             $Data = Blog::where('id', $id)->with('blogcategory')->first();
             if (!empty($Data)) {
-
                 if (!empty($Data->image)) {
                     $path = Get_Image($this->folder9, $Data->image);
                     $Data['image'] = $path;
@@ -250,170 +283,117 @@ class UserController extends Controller
             return response()->json(array('status' => 400, 'errors' => $e->getMessage()));
         }
     }
-    
-    
-      
     public function about_uspage()
     {
-        
-            $Data = Page::where('id', 1)->first();
-            if (!empty($Data)) {
-                
-                 $Dataother = Pagesubdata::get();
-           if (sizeof($Dataother) > 0) {
-
+        $Data = Page::where('id', 1)->first();
+        if (!empty($Data)) {
+            $Dataother = Pagesubdata::get();
+            if (sizeof($Dataother) > 0) {
                 for ($i = 0; $i < count($Dataother); $i++) {
-
                     if (!empty($Dataother[$i]['icon'])) {
-
                         $path = Get_Image($this->folder10, $Dataother[$i]['icon']);
                         $Dataother[$i]['image'] = $path;
                     } else {
-
                         $Dataother[$i]['image'] = asset('/assets/imgs/no_img.png');
                     }
                 }
-           }
-           
-           $Data['others']=$Dataother;
-
-               
-                return APIResponse(200, __('api_msg.get_record_successfully'), $Data);
-            } else {
-                return APIResponse(400, __('api_msg.data_not_found'));
             }
-    
+            $Data['others'] = $Dataother;
+            return APIResponse(200, __('api_msg.get_record_successfully'), $Data);
+        } else {
+            return APIResponse(400, __('api_msg.data_not_found'));
+        }
     }
-    
-    
-      public function get_blog()
+    public function get_blog()
     {
-        
-            $Data = Blog::with('blogcategory')->get();
-           if (sizeof($Data) > 0) {
-
-                for ($i = 0; $i < count($Data); $i++) {
-
-                    if (!empty($Data[$i]['image'])) {
-
-                        $path = Get_Image($this->folder9, $Data[$i]['image']);
-                        $Data[$i]['image'] = $path;
-                    } else {
-
-                        $Data[$i]['image'] = asset('/assets/imgs/no_img.png');
-                    }
+        $Data = Blog::with('blogcategory')->get();
+        if (sizeof($Data) > 0) {
+            for ($i = 0; $i < count($Data); $i++) {
+                if (!empty($Data[$i]['image'])) {
+                    $path = Get_Image($this->folder9, $Data[$i]['image']);
+                    $Data[$i]['image'] = $path;
+                } else {
+                    $Data[$i]['image'] = asset('/assets/imgs/no_img.png');
                 }
-                return APIResponse(200, __('api_msg.get_record_successfully'), $Data);
-            } else {
-                return APIResponse(400, __('api_msg.data_not_found'));
             }
-       
+            return APIResponse(200, __('api_msg.get_record_successfully'), $Data);
+        } else {
+            return APIResponse(400, __('api_msg.data_not_found'));
+        }
     }
-    
-      public function get_alllabs()
+    public function get_alllabs()
     {
-        
-        $Data = Lablists::get();
-           if (sizeof($Data) > 0) {
+        $Data = Laboratory::get();
 
-              
-                return APIResponse(200, __('api_msg.get_record_successfully'), $Data);
-            } else {
-                return APIResponse(400, __('api_msg.data_not_found'));
-            }
-       
+        if (sizeof($Data) > 0) {
+            return APIResponse(200, __('api_msg.get_record_successfully'), $Data);
+        } else {
+            return APIResponse(400, __('api_msg.data_not_found'));
+        }
     }
-    
-     public function get_tests()
+    public function get_tests()
     {
-        
         $Data = Service::get();
-            if (sizeof($Data) > 0) {
-
-                for ($i = 0; $i < count($Data); $i++) {
-
-                    if (!empty($Data[$i]['image'])) {
-
-                        $path = Get_Image($this->folder10, $Data[$i]['image']);
-                        $Data[$i]['image'] = $path;
-                    } else {
-
-                        $Data[$i]['image'] = asset('/assets/imgs/no_img.png');
-                    }
+        if (sizeof($Data) > 0) {
+            for ($i = 0; $i < count($Data); $i++) {
+                if (!empty($Data[$i]['image'])) {
+                    $path = Get_Image($this->folder10, $Data[$i]['image']);
+                    $Data[$i]['image'] = $path;
+                } else {
+                    $Data[$i]['image'] = asset('/assets/imgs/no_img.png');
                 }
-                return APIResponse(200, __('api_msg.get_record_successfully'), $Data);
-            }else {
-                return APIResponse(400, __('api_msg.data_not_found'));
             }
-       
+            return APIResponse(200, __('api_msg.get_record_successfully'), $Data);
+        } else {
+            return APIResponse(400, __('api_msg.data_not_found'));
+        }
     }
-    
-      public function get_allbanner()
+    public function get_allbanner()
     {
-        
         $Data = Channel_Banner::orderBy('order_no', 'ASC')->get();
-           if (sizeof($Data) > 0) {
-
-                for ($i = 0; $i < count($Data); $i++) {
-
-                    if (!empty($Data[$i]['image'])) {
-
-                        $path = Get_Image($this->folder10, $Data[$i]['image']);
-                        $Data[$i]['image'] = $path;
-                    } else {
-
-                        $Data[$i]['image'] = asset('/assets/imgs/no_img.png');
-                    }
+        if (sizeof($Data) > 0) {
+            for ($i = 0; $i < count($Data); $i++) {
+                if (!empty($Data[$i]['image'])) {
+                    $path = Get_Image($this->folder10, $Data[$i]['image']);
+                    $Data[$i]['image'] = $path;
+                } else {
+                    $Data[$i]['image'] = asset('/assets/imgs/no_img.png');
                 }
-                return APIResponse(200, __('api_msg.get_record_successfully'), $Data);
-            } else {
-                return APIResponse(400, __('api_msg.data_not_found'));
             }
-       
+            return APIResponse(200, __('api_msg.get_record_successfully'), $Data);
+        } else {
+            return APIResponse(400, __('api_msg.data_not_found'));
+        }
     }
-    
-     public function get_partnersubject()
+    public function get_partnersubject()
     {
-        
-            $Data = Partnersubject::select('sub')->get();
-           if (sizeof($Data) > 0) {
-
-              
-                return APIResponse(200, __('api_msg.get_record_successfully'), $Data);
-            } else {
-                return APIResponse(400, __('api_msg.data_not_found'));
-            }
-       
+        $Data = Partnersubject::select('sub')->get();
+        if (sizeof($Data) > 0) {
+            return APIResponse(200, __('api_msg.get_record_successfully'), $Data);
+        } else {
+            return APIResponse(400, __('api_msg.data_not_found'));
+        }
     }
-
- public function get_gallery()
+    public function get_gallery()
     {
-        
-            $Data = Gallery::get();
-           if (sizeof($Data) > 0) {
-
-                for ($i = 0; $i < count($Data); $i++) {
-
-                    if (!empty($Data[$i]['image'])) {
-
-                        $path = Get_Image($this->folder9, $Data[$i]['image']);
-                        $Data[$i]['image'] = $path;
-                    } else {
-
-                        $Data[$i]['image'] = asset('/assets/imgs/no_img.png');
-                    }
+        $Data = Gallery::get();
+        if (sizeof($Data) > 0) {
+            for ($i = 0; $i < count($Data); $i++) {
+                if (!empty($Data[$i]['image'])) {
+                    $path = Get_Image($this->folder9, $Data[$i]['image']);
+                    $Data[$i]['image'] = $path;
+                } else {
+                    $Data[$i]['image'] = asset('/assets/imgs/no_img.png');
                 }
-                return APIResponse(200, __('api_msg.get_record_successfully'), $Data);
-            } else {
-                return APIResponse(400, __('api_msg.data_not_found'));
             }
-       
+            return APIResponse(200, __('api_msg.get_record_successfully'), $Data);
+        } else {
+            return APIResponse(400, __('api_msg.data_not_found'));
+        }
     }
-    
-     public function delete_family(Request $request)
+    public function delete_family(Request $request)
     {
         try {
-
             $validation = Validator::make(
                 $request->all(),
                 [
@@ -424,7 +404,6 @@ class UserController extends Controller
                 ]
             );
             if ($validation->fails()) {
-
                 $errors = $validation->errors()->first('id');
                 $data['status'] = 400;
                 if ($errors) {
@@ -432,12 +411,10 @@ class UserController extends Controller
                 }
                 return $data;
             }
-
             $id = $request->id;
             $Data = Familys::where('id', $id)->first();
             if (!empty($Data)) {
-
-               $Data = Familys::where('id', $id)->delete();
+                $Data = Familys::where('id', $id)->delete();
                 return APIResponse(200, __('api_msg.delete_success'), []);
             } else {
                 return APIResponse(400, __('api_msg.data_not_found'));
@@ -446,22 +423,16 @@ class UserController extends Controller
             return response()->json(array('status' => 400, 'errors' => $e->getMessage()));
         }
     }
-
-    
-      public function get_relation()
+    public function get_relation()
     {
         try {
-            $Data = Relation::where('status','1')->latest()->get();
+            $Data = Relation::where('status', '1')->latest()->get();
             if (sizeof($Data) > 0) {
-
                 for ($i = 0; $i < count($Data); $i++) {
-
                     if (!empty($Data[$i]['image'])) {
-
                         $path = Get_Image($this->folder2, $Data[$i]['image']);
                         $Data[$i]['image'] = $path;
                     } else {
-
                         $Data[$i]['image'] = asset('/assets/imgs/no_img.png');
                     }
                 }
@@ -473,13 +444,11 @@ class UserController extends Controller
             return response()->json(array('status' => 400, 'errors' => $e->getMessage()));
         }
     }
-    
-      public function get_state()
+    public function get_state()
     {
         try {
             $Data = State::latest()->get();
             if (sizeof($Data) > 0) {
-
                 return APIResponse(200, __('api_msg.get_record_successfully'), $Data);
             } else {
                 return APIResponse(400, __('api_msg.data_not_found'));
@@ -488,17 +457,15 @@ class UserController extends Controller
             return response()->json(array('status' => 400, 'errors' => $e->getMessage()));
         }
     }
-    
-     public function get_city(Request $request)
+    public function get_city(Request $request)
     {
         try {
-            if(isset($request->state_id) && $request->state_id!='0'){
-            $Data = City::where('state_id',$request->state_id)->latest()->get();    
-            }else{
-            $Data = City::latest()->get();
+            if (isset($request->state_id) && $request->state_id != '0') {
+                $Data = City::where('state_id', $request->state_id)->latest()->get();
+            } else {
+                $Data = City::latest()->get();
             }
             if (sizeof($Data) > 0) {
-
                 return APIResponse(200, __('api_msg.get_record_successfully'), $Data);
             } else {
                 return APIResponse(400, __('api_msg.data_not_found'));
@@ -507,12 +474,9 @@ class UserController extends Controller
             return response()->json(array('status' => 400, 'errors' => $e->getMessage()));
         }
     }
-    
-    
     public function list_address(Request $request)
     {
-         try {
-
+        try {
             $validation = Validator::make(
                 $request->all(),
                 [
@@ -523,7 +487,6 @@ class UserController extends Controller
                 ]
             );
             if ($validation->fails()) {
-
                 $errors = $validation->errors()->first('id');
                 $data['status'] = 400;
                 if ($errors) {
@@ -531,13 +494,9 @@ class UserController extends Controller
                 }
                 return $data;
             }
-
             $id = $request->user_id;
             $Data = Address::where('user_id', $id)->with('state')->with('city')->get();
-            
             if (sizeof($Data) > 0) {
-
-               
                 return APIResponse(200, __('api_msg.get_record_successfully'), $Data);
             } else {
                 return APIResponse(400, __('api_msg.data_not_found'));
@@ -546,11 +505,9 @@ class UserController extends Controller
             return response()->json(array('status' => 400, 'errors' => $e->getMessage()));
         }
     }
-    
-     public function list_family(Request $request)
+    public function list_family(Request $request)
     {
-         try {
-
+        try {
             $validation = Validator::make(
                 $request->all(),
                 [
@@ -561,7 +518,6 @@ class UserController extends Controller
                 ]
             );
             if ($validation->fails()) {
-
                 $errors = $validation->errors()->first('id');
                 $data['status'] = 400;
                 if ($errors) {
@@ -569,20 +525,14 @@ class UserController extends Controller
                 }
                 return $data;
             }
-
             $id = $request->user_id;
             $Data = Familys::where('user_id', $id)->with('relation')->get();
-            
             if (sizeof($Data) > 0) {
-
                 for ($i = 0; $i < count($Data); $i++) {
-
                     if (!empty($Data[$i]['image'])) {
-
                         $path = Get_Image($this->folder7, $Data[$i]['image']);
                         $Data[$i]['image'] = $path;
                     } else {
-
                         $Data[$i]['image'] = asset('/assets/imgs/no_img.png');
                     }
                 }
@@ -594,11 +544,9 @@ class UserController extends Controller
             return response()->json(array('status' => 400, 'errors' => $e->getMessage()));
         }
     }
-    
     public function delete_address(Request $request)
     {
         try {
-
             $validation = Validator::make(
                 $request->all(),
                 [
@@ -609,7 +557,6 @@ class UserController extends Controller
                 ]
             );
             if ($validation->fails()) {
-
                 $errors = $validation->errors()->first('id');
                 $data['status'] = 400;
                 if ($errors) {
@@ -617,12 +564,10 @@ class UserController extends Controller
                 }
                 return $data;
             }
-
             $id = $request->address_id;
             $Data = Address::where('id', $id)->first();
             if (!empty($Data)) {
-
-               $Data = Address::where('id', $id)->delete();
+                $Data = Address::where('id', $id)->delete();
                 return APIResponse(200, __('api_msg.delete_success'), []);
             } else {
                 return APIResponse(400, __('api_msg.data_not_found'));
@@ -631,16 +576,14 @@ class UserController extends Controller
             return response()->json(array('status' => 400, 'errors' => $e->getMessage()));
         }
     }
-    
     public function add_address(Request $request)
     {
-         try {
-
+        try {
             $validation = Validator::make(
                 $request->all(),
                 [
                     'user_id' => 'required|numeric',
-                     'address' => 'required',
+                    'address' => 'required',
                 ],
                 [
                     'user_id.required' => __('api_msg.please_enter_required_fields'),
@@ -648,7 +591,6 @@ class UserController extends Controller
                 ]
             );
             if ($validation->fails()) {
-
                 $errors = $validation->errors()->first('id');
                 $data['status'] = 400;
                 if ($errors) {
@@ -656,40 +598,27 @@ class UserController extends Controller
                 }
                 return $data;
             }
-
             $id = $request->user_id;
             $data = Users::where('id', $id)->first();
             if (!empty($data)) {
-
-
-            $address = $request->address;
-            $house = $request->house;
-            $landmark = $request->landmark;
-            $area = $request->area;
-            $pincode = $request->pincode;
-             $state_id = $request->state_id;
-              $city_id = $request->city_id;
-              
-            
-
-
-            $data = array(
-               
-                'address' => $address,
-                'user_id' => $id,
-                'house' => $house,
-                'landmark' => $landmark,
-                'area' => $area,
-                'pincode' => $pincode,
-                 'state_id' => $state_id,
-               'city_id' => $city_id,
-             
-                
-            );
-
-            $user_id = Address::insertGetId($data);
-            
-            
+                $address = $request->address;
+                $house = $request->house;
+                $landmark = $request->landmark;
+                $area = $request->area;
+                $pincode = $request->pincode;
+                $state_id = $request->state_id;
+                $city_id = $request->city_id;
+                $data = array(
+                    'address' => $address,
+                    'user_id' => $id,
+                    'house' => $house,
+                    'landmark' => $landmark,
+                    'area' => $area,
+                    'pincode' => $pincode,
+                    'state_id' => $state_id,
+                    'city_id' => $city_id,
+                );
+                $user_id = Address::insertGetId($data);
                 return APIResponse(200, __('api_msg.update_successfully'));
             } else {
                 return APIResponse(400, __('api_msg.data_not_found'));
@@ -698,11 +627,9 @@ class UserController extends Controller
             return response()->json(array('status' => 400, 'errors' => $e->getMessage()));
         }
     }
-    
-     public function update_address(Request $request)
+    public function update_address(Request $request)
     {
         try {
-
             $validation = Validator::make(
                 $request->all(),
                 [
@@ -713,7 +640,6 @@ class UserController extends Controller
                 ]
             );
             if ($validation->fails()) {
-
                 $errors = $validation->errors()->first('id');
                 $data['status'] = 400;
                 if ($errors) {
@@ -721,26 +647,23 @@ class UserController extends Controller
                 }
                 return $data;
             }
-
             $id = $request->address_id;
             $data = array();
-
             $User_Data = Address::where('id', $id)->first();
             if (!empty($User_Data)) {
-
                 if (isset($request->address) && $request->address != '') {
                     $data['address'] = $request->address;
                 }
-                 if (isset($request->house) && $request->house != '') {
+                if (isset($request->house) && $request->house != '') {
                     $data['house'] = $request->house;
                 }
-                 if (isset($request->landmark) && $request->landmark != '') {
+                if (isset($request->landmark) && $request->landmark != '') {
                     $data['landmark'] = $request->landmark;
                 }
                 if (isset($request->area) && $request->area != '') {
                     $data['area'] = $request->area;
                 }
-                 if (isset($request->pincode) && $request->pincode != '') {
+                if (isset($request->pincode) && $request->pincode != '') {
                     $data['pincode'] = $request->pincode;
                 }
                 if (isset($request->state_id) && $request->state_id != '') {
@@ -749,11 +672,8 @@ class UserController extends Controller
                 if (isset($request->city_id) && $request->city_id != '') {
                     $data['city_id'] = $request->city_id;
                 }
-
                 $User_Data->update($data);
-                if(isset($User_Data)){
-
-                  
+                if (isset($User_Data)) {
                     $Data['status'] = 200;
                     $Data['message'] = __('api_msg.update_profile_sucessfuly');
                     $Data['result'] = $User_Data;
@@ -766,20 +686,14 @@ class UserController extends Controller
             return response()->json(array('status' => 400, 'errors' => $e->getMessage()));
         }
     }
-    
-    
-    
-    
-    
     public function add_family(Request $request)
     {
-         try {
-
+        try {
             $validation = Validator::make(
                 $request->all(),
                 [
                     'user_id' => 'required|numeric',
-                     'first_name' => 'required',
+                    'first_name' => 'required',
                 ],
                 [
                     'user_id.required' => __('api_msg.please_enter_required_fields'),
@@ -787,7 +701,6 @@ class UserController extends Controller
                 ]
             );
             if ($validation->fails()) {
-
                 $errors = $validation->errors()->first('id');
                 $data['status'] = 400;
                 if ($errors) {
@@ -795,46 +708,34 @@ class UserController extends Controller
                 }
                 return $data;
             }
-
             $id = $request->user_id;
             $data = Users::where('id', $id)->first();
             if (!empty($data)) {
-
-
-            $name = $request->first_name;
-            $last_name = $request->last_name;
-            $email = $request->email;
-            $date_of_birth = $request->date_of_birth;
-            $mobile = $request->mobile;
-             $relation = $request->relation;
-              $gender = $request->gender;
-              
-               $org_name = $request->file('image');
-
-           if($org_name!=''){
-                $dimage = saveImage($org_name, $this->folder7);
-           }else{
-               $dimage='';
-           }
-              
-
-            $data = array(
-               
-                'first_name' => $name,
-                'user_id' => $id,
-                'mobile' => $mobile,
-                'email' => $email,
-                'relation' => $relation,
-                'gender' => $gender,
-                 'last_name' => $last_name,
-               'date_of_birth' => $date_of_birth,
-               'image' => $dimage,
-                
-            );
-
-            $user_id = Familys::insertGetId($data);
-            
-            
+                $name = $request->first_name;
+                $last_name = $request->last_name;
+                $email = $request->email;
+                $date_of_birth = $request->date_of_birth;
+                $mobile = $request->mobile;
+                $relation = $request->relation;
+                $gender = $request->gender;
+                $org_name = $request->file('image');
+                if ($org_name != '') {
+                    $dimage = saveImage($org_name, $this->folder7);
+                } else {
+                    $dimage = '';
+                }
+                $data = array(
+                    'first_name' => $name,
+                    'user_id' => $id,
+                    'mobile' => $mobile,
+                    'email' => $email,
+                    'relation' => $relation,
+                    'gender' => $gender,
+                    'last_name' => $last_name,
+                    'date_of_birth' => $date_of_birth,
+                    'image' => $dimage,
+                );
+                $user_id = Familys::insertGetId($data);
                 return APIResponse(200, __('api_msg.update_successfully'));
             } else {
                 return APIResponse(400, __('api_msg.data_not_found'));
@@ -843,31 +744,25 @@ class UserController extends Controller
             return response()->json(array('status' => 400, 'errors' => $e->getMessage()));
         }
     }
-    
-    
-    
-    
     public function enquiry(Request $request)
     {
-         try {
-
+        try {
             $validation = Validator::make(
                 $request->all(),
                 [
                     'name' => 'required',
-                     'email' => 'required',
-                      'phone' => 'required',
-                       'enquiry_type' => 'required',
+                    'email' => 'required',
+                    'phone' => 'required',
+                    'enquiry_type' => 'required',
                 ],
                 [
                     'name.required' => __('api_msg.please_enter_required_fields'),
                     'email.required' => __('api_msg.please_enter_required_fields'),
-                     'phone.required' => __('api_msg.please_enter_required_fields'),
-                      'enquiry_type.required' => __('api_msg.please_enter_required_fields'),
+                    'phone.required' => __('api_msg.please_enter_required_fields'),
+                    'enquiry_type.required' => __('api_msg.please_enter_required_fields'),
                 ]
             );
             if ($validation->fails()) {
-
                 $errors = $validation->errors()->first('id');
                 $data['status'] = 400;
                 if ($errors) {
@@ -875,47 +770,29 @@ class UserController extends Controller
                 }
                 return $data;
             }
-
-
-
             $name = $request->name;
-          
             $email = $request->email;
             $subject = $request->subject;
             $mobile = $request->phone;
-             $message = $request->message;
-              $enquiry_type = $request->enquiry_type;
-              
-          
-
-         
+            $message = $request->message;
+            $enquiry_type = $request->enquiry_type;
             $data = array(
-               
                 'name' => $name,
-              
                 'phone' => $mobile,
                 'email' => $email,
                 'subject' => $subject,
                 'message' => $message,
-                 'enquiry_type' => $enquiry_type,
-             
-                
+                'enquiry_type' => $enquiry_type,
             );
-
             $user_id = Enquiry::insertGetId($data);
-            
-            
-                return APIResponse(200, 'Enquiry sent successfully');
-           
+            return APIResponse(200, 'Enquiry sent successfully');
         } catch (Exception $e) {
             return response()->json(array('status' => 400, 'errors' => $e->getMessage()));
         }
     }
-
     public function image_upload(Request $request)
     {
         try {
-
             $validation = Validator::make(
                 $request->all(),
                 [
@@ -928,7 +805,6 @@ class UserController extends Controller
                 ]
             );
             if ($validation->fails()) {
-
                 $errors = $validation->errors()->first('id');
                 $errors1 = $validation->errors()->first('image');
                 $data['status'] = 400;
@@ -939,15 +815,11 @@ class UserController extends Controller
                 }
                 return $data;
             }
-
             $id = $request->id;
             $org_name = $request->file('image');
-
             $data = Users::where('id', $id)->first();
             if (!empty($data)) {
-
                 @unlink("images/" . $this->folder7 . "/" . $data['image']);
-
                 $data->image = saveImage($org_name, $this->folder7);
                 if ($data->save()) {
                     return APIResponse(200, __('api_msg.update_successfully'));
@@ -961,33 +833,30 @@ class UserController extends Controller
             return response()->json(array('status' => 400, 'errors' => $e->getMessage()));
         }
     }
-
     public function registration(Request $request)
     {
         try {
-
             $validation = Validator::make(
                 $request->all(),
                 [
-                   // 'age' => 'required|numeric',
+                    // 'age' => 'required|numeric',
                     'name' => 'required',
                     'email' => 'required|unique:user|email',
-                   // 'gender' => 'required',
+                    // 'gender' => 'required',
                     'mobile' => 'required|numeric',
                 ],
                 [
-                //    'age.required' => __('api_msg.please_enter_required_fields'),
+                    //    'age.required' => __('api_msg.please_enter_required_fields'),
                     'email.required' => __('api_msg.please_enter_required_fields'),
                     'mobile.required' => __('api_msg.please_enter_required_fields'),
                 ]
             );
             if ($validation->fails()) {
-
-            //    $errors = $validation->errors()->first('age');
+                //    $errors = $validation->errors()->first('age');
                 $errors1 = $validation->errors()->first('email');
                 $errors2 = $validation->errors()->first('mobile');
                 $data['status'] = 400;
-               if ($errors1) {
+                if ($errors1) {
                     $data['message'] = $errors1;
                 } elseif ($errors2) {
                     $data['message'] = $errors2;
@@ -996,15 +865,13 @@ class UserController extends Controller
                 }
                 return $data;
             }
-
             $type = 3;
             $name = $request->name;
             $email = $request->email;
             $password = '12345';
             $mobile = $request->mobile;
-             $age = '0';
-              $gender = 'Male';
-
+            $age = '0';
+            $gender = 'Male';
             $data = array(
                 'language_id' => 0,
                 'name' => $name,
@@ -1014,7 +881,7 @@ class UserController extends Controller
                 'email' => $email,
                 'password' => $password,
                 'gender' => $gender,
-                 'age' => $age,
+                'age' => $age,
                 'image' => "",
                 'status' => 1,
                 'type' => $type,
@@ -1022,30 +889,22 @@ class UserController extends Controller
                 'email_verify_token' => "",
                 'is_email_verify' => "",
             );
-
             $user_id = Users::insertGetId($data);
-
             if (isset($user_id)) {
-
                 $user_data = Users::where('id', $user_id)->first();
                 return APIResponse(200, __('api_msg.User_registration_sucessfuly'), $user_data);
             } else {
                 return APIResponse(400, __('api_msg.data_not_save'));
             }
-
         } catch (Exception $e) {
             return response()->json(array('status' => 400, 'errors' => $e->getMessage()));
         }
     }
-
     public function login(Request $request)
     {
         try {
-            
-            $request->type=3;
-
+            $request->type = 3;
             if ($request->type == 1 or $request->type == 2) {
-
                 $validation = Validator::make(
                     $request->all(),
                     [
@@ -1058,7 +917,6 @@ class UserController extends Controller
                     ]
                 );
                 if ($validation->fails()) {
-
                     $errors = $validation->errors()->first('name');
                     $errors1 = $validation->errors()->first('email');
                     $data['status'] = 400;
@@ -1069,21 +927,17 @@ class UserController extends Controller
                     }
                     return $data;
                 }
-
             } elseif ($request->type == 3) {
-
                 $validation = Validator::make(
                     $request->all(),
                     [
                         'mobile' => 'required|numeric',
-                       
                     ],
                     [
                         'mobile.required' => __('api_msg.please_enter_required_fields'),
                     ]
                 );
                 if ($validation->fails()) {
-
                     $errors = $validation->errors()->first('mobile');
                     $data['status'] = 400;
                     if ($errors) {
@@ -1091,9 +945,7 @@ class UserController extends Controller
                     }
                     return $data;
                 }
-
             } elseif ($request->type == 4) {
-
                 $validation = Validator::make(
                     $request->all(),
                     [
@@ -1105,7 +957,6 @@ class UserController extends Controller
                     ]
                 );
                 if ($validation->fails()) {
-
                     $errors = $validation->errors()->first('email');
                     $data['status'] = 400;
                     if ($errors) {
@@ -1115,7 +966,6 @@ class UserController extends Controller
                     }
                     return $data;
                 }
-
             } else {
                 $validation = Validator::make(
                     $request->all(),
@@ -1127,7 +977,6 @@ class UserController extends Controller
                     ]
                 );
                 if ($validation->fails()) {
-
                     $errors = $validation->errors()->first('type');
                     $data['status'] = 400;
                     if ($errors) {
@@ -1136,19 +985,15 @@ class UserController extends Controller
                     return $data;
                 }
             }
-
             $type = $request->type;
             $name = isset($request->name) ? $request->name : "";
             $email = isset($request->email) ? $request->email : "";
             $password = isset($request->password) ? $request->password : "";
             $mobile = isset($request->mobile) ? $request->mobile : "";
             $role = isset($request->role) ? $request->role : "";
-
             if ($type == 1 or $type == 2) {
-
                 $data = Users::where('email', $email)->first();
                 if (!empty($data)) {
-
                     // Image
                     if (!empty($data['image'])) {
                         $path = Get_Image($this->folder7, $data['image']);
@@ -1161,17 +1006,11 @@ class UserController extends Controller
                     $return['result'] = $data;
                     return $return;
                 } else {
-
-                    
-                        return APIResponse(400, __('api_msg.data_not_save'));
-                    
+                    return APIResponse(400, __('api_msg.data_not_save'));
                 }
-
             } elseif ($type == 3) {
-
                 $data = Users::where('mobile', $mobile)->first();
                 if (!empty($data)) {
-
                     // Image
                     if (!empty($data['image'])) {
                         $path = Get_Image($this->folder7, $data['image']);
@@ -1184,16 +1023,11 @@ class UserController extends Controller
                     $return['result'] = $data;
                     return $return;
                 } else {
-                    
-                      return APIResponse(400, 'User not registered');
-                    
+                    return APIResponse(400, 'User not registered');
                 }
-
             } elseif ($type == 4) {
-
                 $data = Users::where('email', $email)->where('password', $password)->first();
                 if (!empty($data)) {
-
                     // Image
                     if (!empty($data['image'])) {
                         $path = Get_Image($this->folder7, $data['image']);
@@ -1208,20 +1042,16 @@ class UserController extends Controller
                 } else {
                     return APIResponse(400, __('api_msg.email_pass_worng'), array($data));
                 }
-
             } else {
                 return APIResponse(400, __('api_msg.change_type'));
             }
-
         } catch (Exception $e) {
             return response()->json(array('status' => 400, 'errors' => $e->getMessage()));
         }
     }
-    
     public function update_family(Request $request)
     {
         try {
-
             $validation = Validator::make(
                 $request->all(),
                 [
@@ -1232,7 +1062,6 @@ class UserController extends Controller
                 ]
             );
             if ($validation->fails()) {
-
                 $errors = $validation->errors()->first('id');
                 $data['status'] = 400;
                 if ($errors) {
@@ -1240,26 +1069,23 @@ class UserController extends Controller
                 }
                 return $data;
             }
-
             $id = $request->id;
             $data = array();
-
             $User_Data = Familys::where('id', $id)->first();
             if (!empty($User_Data)) {
-
                 if (isset($request->first_name) && $request->first_name != '') {
                     $data['first_name'] = $request->first_name;
                 }
-                 if (isset($request->last_name) && $request->last_name != '') {
+                if (isset($request->last_name) && $request->last_name != '') {
                     $data['last_name'] = $request->last_name;
                 }
-                 if (isset($request->date_of_birth) && $request->date_of_birth != '') {
+                if (isset($request->date_of_birth) && $request->date_of_birth != '') {
                     $data['date_of_birth'] = $request->date_of_birth;
                 }
                 if (isset($request->email) && $request->email != '') {
                     $data['email'] = $request->email;
                 }
-                 if (isset($request->gender) && $request->gender != '') {
+                if (isset($request->gender) && $request->gender != '') {
                     $data['gender'] = $request->gender;
                 }
                 if (isset($request->mobile) && $request->mobile != '') {
@@ -1268,17 +1094,14 @@ class UserController extends Controller
                 if (isset($request->relation) && $request->relation != '') {
                     $data['relation'] = $request->relation;
                 }
-
                 $User_Data->update($data);
-                if(isset($User_Data)){
-
+                if (isset($User_Data)) {
                     if (!empty($User_Data->image)) {
                         $path = Get_Image($this->folder7, $User_Data->image);
                         $User_Data['image'] = $path;
                     } else {
                         $User_Data['image'] = asset('/assets/imgs/no_img.png');
                     }
-
                     $Data['status'] = 200;
                     $Data['message'] = __('api_msg.update_profile_sucessfuly');
                     $Data['result'] = $User_Data;
@@ -1291,11 +1114,9 @@ class UserController extends Controller
             return response()->json(array('status' => 400, 'errors' => $e->getMessage()));
         }
     }
-
     public function update_profile(Request $request)
     {
         try {
-
             $validation = Validator::make(
                 $request->all(),
                 [
@@ -1306,7 +1127,6 @@ class UserController extends Controller
                 ]
             );
             if ($validation->fails()) {
-
                 $errors = $validation->errors()->first('id');
                 $data['status'] = 400;
                 if ($errors) {
@@ -1314,42 +1134,36 @@ class UserController extends Controller
                 }
                 return $data;
             }
-
             $id = $request->id;
             $data = array();
-
             $User_Data = Users::where('id', $id)->first();
             if (!empty($User_Data)) {
-
                 if (isset($request->name) && $request->name != '') {
                     $data['name'] = $request->name;
                 }
-                 if (isset($request->last_name) && $request->last_name != '') {
+                if (isset($request->last_name) && $request->last_name != '') {
                     $data['last_name'] = $request->last_name;
                 }
-                 if (isset($request->date_of_birth) && $request->date_of_birth != '') {
+                if (isset($request->date_of_birth) && $request->date_of_birth != '') {
                     $data['date_of_birth'] = $request->date_of_birth;
                 }
                 if (isset($request->email) && $request->email != '') {
                     $data['email'] = $request->email;
                 }
-                 if (isset($request->gender) && $request->gender != '') {
+                if (isset($request->gender) && $request->gender != '') {
                     $data['gender'] = $request->gender;
                 }
                 if (isset($request->mobile) && $request->mobile != '') {
                     $data['mobile'] = $request->mobile;
                 }
-
                 $User_Data->update($data);
-                if(isset($User_Data)){
-
+                if (isset($User_Data)) {
                     if (!empty($User_Data->image)) {
                         $path = Get_Image($this->folder7, $User_Data->image);
                         $User_Data['image'] = $path;
                     } else {
                         $User_Data['image'] = asset('/assets/imgs/no_img.png');
                     }
-
                     $Data['status'] = 200;
                     $Data['message'] = __('api_msg.update_profile_sucessfuly');
                     $Data['result'] = $User_Data;
@@ -1362,65 +1176,66 @@ class UserController extends Controller
             return response()->json(array('status' => 400, 'errors' => $e->getMessage()));
         }
     }
-    
-    
-  public function booking_list(Request $request)
-{
-    try {
-        $query = Booking::with([
-            'user:id,name,image', 
-            'test:id,name'
-        ])->orderBy('id', 'desc');
+    public function booking_list(Request $request)
+    {
+        try {
+            $query = Booking::with('user')->orderBy('id', 'desc');
 
-        if ($request->has('user_id') && !empty($request->user_id)) {
-            $query->where('user_id', $request->user_id);
-        }
-
-        $bookings = $query->get();
-
-        if ($bookings->isEmpty()) {
-            return response()->json([
-                'status'  => 200,
-                'message' => 'No bookings found',
-                'result'  => []
-            ], 200);
-        }
-
-        $result = [];
-        foreach ($bookings as $booking) {
-            $status = 'Pending';
-            if ($booking->payment_status == 1) {
-                $status = 'Booked';
-            } elseif ($booking->payment_status == 2) {
-                $status = 'Cancelled';
+            if ($request->has('user_id') && !empty($request->user_id)) {
+                $query->where('user_id', $request->user_id);
             }
 
-            $result[] = [
-                'booking_id'   => $booking->booking_id,
-                'user_name'    => $booking->user->name ?? '',
-                'user_image'   => $booking->user->image ?? '',
-                'test_name'    => $booking->test->name ?? '',
-                'date'         => date('d M Y', strtotime($booking->created_at)),
-                'time'         => date('h:i A', strtotime($booking->created_at)),
-                'center_name'  => 'Rachana Diagnostic',
-                'status'       => $status,
-            ];
+            $bookings = $query->get();
+
+            if ($bookings->isEmpty()) {
+                return response()->json([
+                    'status' => 200,
+                    'message' => 'No bookings found',
+                    'result' => []
+                ], 200);
+            }
+
+            $result = [];
+            foreach ($bookings as $booking) {
+                // Image URL logic
+                $image_url = $booking->user && $booking->user->image ? Get_Image('user', $booking->user->image) : asset('assets/imgs/1.png');
+
+                // Status logic
+                $status = 'Pending';
+                if ($booking->payment_status == 1) {
+                    $status = 'Booked';
+                } elseif ($booking->payment_status == 2) {
+                    $status = 'Cancelled';
+                }
+
+                // Payment ID formatting
+                $payment_id = ucfirst($booking->payment_id);
+
+                $result[] = [
+                    'booking_id' => $booking->booking_id,
+                    'user_name' => $booking->user->name ?? '',
+                    'user_image' => $image_url,
+                    'booking_type' => ucfirst($booking->booking_type),
+                    'payment_status' => $status,
+                    'payment_id' => $payment_id,
+                    'date' => $booking->created_at->format('d M Y'),
+                    'time' => $booking->created_at->format('h:i A'),
+                    'center_name' => 'Rachana Diagnostic',
+                ];
+            }
+
+            return response()->json([
+                'status' => 200,
+                'message' => 'Booking list fetched successfully',
+                'result' => $result
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 400,
+                'errors' => $e->getMessage()
+            ], 400);
         }
-
-        return response()->json([
-            'status'  => 200,
-            'message' => 'Booking list fetched successfully',
-            'result'  => $result
-        ], 200);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => 400,
-            'errors' => $e->getMessage()
-        ], 400);
     }
-}
-
-
 
 }

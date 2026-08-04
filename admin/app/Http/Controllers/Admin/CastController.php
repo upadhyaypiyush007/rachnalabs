@@ -35,6 +35,8 @@ class CastController extends Controller
 
                 $data->transform(function ($item) {
                     $item->image_url = $item->image ? Get_Image('cast', $item->image) : asset('assets/imgs/1.png');
+                    $item->availability_start = $item->availability_start ? date('h:i A', strtotime($item->availability_start)) : null;
+                    $item->availability_end = $item->availability_end ? date('h:i A', strtotime($item->availability_end)) : null;
                     return $item;
                 });
 
@@ -73,6 +75,9 @@ class CastController extends Controller
                 'type' => 'required',
                 'personal_info' => 'required',
                 'image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+                'availability_start' => 'required',
+                'availability_end' => 'required|after:availability_start',
+
             ]);
             if ($validator->fails()) {
 
@@ -83,6 +88,9 @@ class CastController extends Controller
                 $cast->name = $request->name;
                 $cast->type = $request->type;
                 $cast->personal_info = $request->personal_info;
+                $cast->availability_start = $request->availability_start;
+                $cast->availability_end = $request->availability_end;
+
 
                 $org_name = $request->file('image');
                 $cast->image = saveImage($org_name, $this->folder);
@@ -115,6 +123,9 @@ class CastController extends Controller
                 'type' => 'required',
                 'personal_info' => 'required',
                 'image' => 'image|mimes:jpeg,png,jpg|max:2048',
+                'availability_start' => 'required',
+                'availability_end' => 'required|after:availability_start',
+
             ]);
             if ($validator->fails()) {
                 $errs = $validator->errors()->all();
@@ -127,6 +138,9 @@ class CastController extends Controller
                     $cast->name = $request->name;
                     $cast->type = $request->type;
                     $cast->personal_info = $request->personal_info;
+                    $cast->availability_start = $request->availability_start;
+                    $cast->availability_end = $request->availability_end;
+
 
                     $org_name = $request->file('image');
                     if ($org_name == null && $cast->image == null) {
@@ -155,19 +169,23 @@ class CastController extends Controller
     {
         try {
             $cast = Cast::where('id', $id)->first();
-            $Video = Video::whereRaw("find_in_set('" . $cast->id . "',video.cast_id)")->first();
-            $TVShow = TVShow::whereRaw("find_in_set('" . $cast->id . "',tv_show.cast_id)")->first();
-
-            if ($Video) {
-                return back()->with('error', "This Cast is used on some other table so you can not remove it.");
-            } elseif ($TVShow) {
-                return back()->with('error', "This Cast is used on some other table so you can not remove it.");
-            } else {
-                if ($cast->delete()) {
+            if ($cast->delete()) {
                     @unlink("images/cast/" . $cast->image);
                     return back()->with('success', __('Label.Data Delete Successfully'));
                 }
-            }
+            // $Video = Video::whereRaw("find_in_set('" . $cast->id . "',video.cast_id)")->first();
+            // $TVShow = TVShow::whereRaw("find_in_set('" . $cast->id . "',tv_show.cast_id)")->first();
+
+            // if ($Video) {
+            //     return back()->with('error', "This Cast is used on some other table so you can not remove it.");
+            // } elseif ($TVShow) {
+            //     return back()->with('error', "This Cast is used on some other table so you can not remove it.");
+            // } else {
+            //     if ($cast->delete()) {
+            //         @unlink("images/cast/" . $cast->image);
+            //         return back()->with('success', __('Label.Data Delete Successfully'));
+            //     }
+            // }
         } catch (Exception $e) {
             return response()->json(array('status' => 400, 'errors' => $e->getMessage()));
         }

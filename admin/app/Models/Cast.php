@@ -16,4 +16,8 @@ class Cast extends Model
     {
         return $this->belongsTo(Session::class,'type');
     }
+      public function laboratories()
+    {
+        return $this->hasMany(Laboratory::class);
+    }
 }

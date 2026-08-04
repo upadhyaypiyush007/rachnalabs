@@ -354,7 +354,18 @@ return [
 	'Enter Test Name'=>'Enter Test Name',
 	'Enter Category'=>'Enter Category',
 	'Enter Test Price'=>'Enter Test Price',
+	'Booking ID'=>'Booking ID',
+	'Bookings'=>'Bookings',
+	'payment_id'=>'Payment ID',
+	'Availability'=>'Availability',
+	'Address'=>'Address',
+	'Test' => 'Test',
+	'Laboratories' => 'Laboratories',
+	'Create' => 'Create',
+	'Save' => 'Save',
+	'Edit Laboratory' => 'Edit Laboratory',
+	'Create Laboratory' => 'Create Laboratory',
+	'Doctors' => 'Doctors',
+
 ]
-
-
 	?>

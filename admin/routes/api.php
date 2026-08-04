@@ -76,5 +76,5 @@ Route::post('get_state', [UserController::class, 'get_state'])->name('get-state'
 Route::post('add_address', [UserController::class, 'add_address'])->name('add-address');
 Route::post('update_address', [UserController::class, 'update_address'])->name('update-address');
 Route::post('delete_address', [UserController::class, 'delete_address'])->name('delete-address');
-Route::post('/booking_list', [UserController::class, 'booking_list'])->name('booking-list');
+Route::get('/booking_list', [UserController::class, 'booking_list'])->name('booking-list');
 
